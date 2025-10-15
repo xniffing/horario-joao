@@ -57,13 +57,9 @@ def main():
             help="Número total de trabalhadores no sistema"
         )
         
-        workers_per_shift = st.slider(
-            "Trabalhadores por Turno",
-            min_value=1,
-            max_value=1,
-            value=1,
-            help="Número de trabalhadores por turno (sempre 1 por turno)"
-        )
+        # Fixed value: 1 worker per shift
+        workers_per_shift = 1
+        st.info("👥 **Trabalhadores por Turno**: 1 (fixo)")
         
         st.markdown("### 📅 Dias de Trabalho por Semana")
         col1, col2 = st.columns(2)
