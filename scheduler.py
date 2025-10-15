@@ -16,12 +16,13 @@ import pandas as pd
 
 
 class ShiftScheduler:
-    def __init__(self, num_workers=5, workers_per_shift=2, min_working_days=3, max_working_days=5):
+    def __init__(self, num_workers=5, workers_per_shift=2, min_working_days=3, max_working_days=5, strict_pattern=True):
         self.num_workers = num_workers
         self.workers = list(range(self.num_workers))
         self.workers_per_shift = workers_per_shift
         self.min_working_days = min_working_days
         self.max_working_days = max_working_days
+        self.strict_pattern = strict_pattern
         
         # Shift definitions
         self.shifts = {
@@ -80,55 +81,80 @@ class ShiftScheduler:
             for shift in available_shifts:
                 model.Add(sum(shifts[worker][day][shift] for worker in self.workers) == self.workers_per_shift)
         
-        # Constraint 3: 4 consecutive working days, then 2 days off pattern (EXACT as specified)
-        for worker in self.workers:
-            for start_day in range(num_days - 5):  # Need 6 days for the pattern
-                # Create indicator variables for the 4-days-on, 2-days-off pattern
-                works_4_days = model.NewBoolVar(f'worker_{worker}_works_4_days_{start_day}')
-                off_2_days = model.NewBoolVar(f'worker_{worker}_off_2_days_{start_day}')
-                
-                # If worker works 4 consecutive days, they must be off for the next 2 days
-                if start_day + 5 < num_days:
-                    # Sum of working days in the 4-day period
-                    working_days_sum = []
-                    for i in range(4):
-                        day = start_day + i
-                        if day < num_days:
-                            available_shifts = self.get_available_shifts(days[day])
-                            if available_shifts:
-                                working_days_sum.append(sum(shifts[worker][day][shift] for shift in available_shifts))
+        # Constraint 3: Working pattern (strict 4+2 or flexible)
+        if self.strict_pattern:
+            # Strict 4 consecutive working days, then 2 days off pattern
+            for worker in self.workers:
+                for start_day in range(num_days - 5):  # Need 6 days for the pattern
+                    # Create indicator variables for the 4-days-on, 2-days-off pattern
+                    works_4_days = model.NewBoolVar(f'worker_{worker}_works_4_days_{start_day}')
+                    off_2_days = model.NewBoolVar(f'worker_{worker}_off_2_days_{start_day}')
                     
-                    # Sum of working days in the 2-day off period
-                    off_days_sum = []
-                    for i in range(2):
-                        day = start_day + 4 + i
-                        if day < num_days:
-                            available_shifts = self.get_available_shifts(days[day])
-                            if available_shifts:
-                                off_days_sum.append(sum(shifts[worker][day][shift] for shift in available_shifts))
+                    # If worker works 4 consecutive days, they must be off for the next 2 days
+                    if start_day + 5 < num_days:
+                        # Sum of working days in the 4-day period
+                        working_days_sum = []
+                        for i in range(4):
+                            day = start_day + i
+                            if day < num_days:
+                                available_shifts = self.get_available_shifts(days[day])
+                                if available_shifts:
+                                    working_days_sum.append(sum(shifts[worker][day][shift] for shift in available_shifts))
+                        
+                        # Sum of working days in the 2-day off period
+                        off_days_sum = []
+                        for i in range(2):
+                            day = start_day + 4 + i
+                            if day < num_days:
+                                available_shifts = self.get_available_shifts(days[day])
+                                if available_shifts:
+                                    off_days_sum.append(sum(shifts[worker][day][shift] for shift in available_shifts))
+                        
+                        if working_days_sum and off_days_sum:
+                            # If works 4 days, then must be off 2 days
+                            model.Add(sum(working_days_sum) == 4).OnlyEnforceIf(works_4_days)
+                            model.Add(sum(off_days_sum) == 0).OnlyEnforceIf(off_2_days)
+                            model.Add(works_4_days == off_2_days)
+        else:
+            # Flexible pattern - just ensure working days per week constraints
+            for worker in self.workers:
+                # Calculate working days per week
+                for week_start in range(0, num_days, 7):
+                    week_end = min(week_start + 7, num_days)
+                    week_working_days = []
                     
-                    if working_days_sum and off_days_sum:
-                        # If works 4 days, then must be off 2 days
-                        model.Add(sum(working_days_sum) == 4).OnlyEnforceIf(works_4_days)
-                        model.Add(sum(off_days_sum) == 0).OnlyEnforceIf(off_2_days)
-                        model.Add(works_4_days == off_2_days)
+                    for day in range(week_start, week_end):
+                        available_shifts = self.get_available_shifts(days[day])
+                        if available_shifts:
+                            week_working_days.append(sum(shifts[worker][day][shift] for shift in available_shifts))
+                    
+                    if week_working_days:
+                        # Flexible working days per week
+                        model.Add(sum(week_working_days) >= self.min_working_days)
+                        model.Add(sum(week_working_days) <= self.max_working_days)
         
-        # Constraint 4: Workers maintain same shift type during their 4-day blocks (EXACT as specified)
-        for worker in self.workers:
-            for start_day in range(num_days - 3):  # Need 4 days for the block
-                for shift in self.shifts.keys():
-                    if start_day + 3 < num_days:
-                        available_shifts_0 = self.get_available_shifts(days[start_day])
-                        if shift in available_shifts_0:
-                            # If worker works this shift on day 0, they must work it on days 1, 2, 3
-                            works_shift_day_0 = shifts[worker][start_day][shift]
-                            
-                            for day_offset in range(1, 4):
-                                day = start_day + day_offset
-                                if day < num_days:
-                                    available_shifts = self.get_available_shifts(days[day])
-                                    if shift in available_shifts:
-                                        model.Add(shifts[worker][day][shift] == 1).OnlyEnforceIf(works_shift_day_0)
+        # Constraint 4: Workers maintain same shift type during their working blocks (conditional)
+        if self.strict_pattern:
+            # Strict: Workers maintain same shift type during their 4-day blocks
+            for worker in self.workers:
+                for start_day in range(num_days - 3):  # Need 4 days for the block
+                    for shift in self.shifts.keys():
+                        if start_day + 3 < num_days:
+                            available_shifts_0 = self.get_available_shifts(days[start_day])
+                            if shift in available_shifts_0:
+                                # If worker works this shift on day 0, they must work it on days 1, 2, 3
+                                works_shift_day_0 = shifts[worker][start_day][shift]
+                                
+                                for day_offset in range(1, 4):
+                                    day = start_day + day_offset
+                                    if day < num_days:
+                                        available_shifts = self.get_available_shifts(days[day])
+                                        if shift in available_shifts:
+                                            model.Add(shifts[worker][day][shift] == 1).OnlyEnforceIf(works_shift_day_0)
+        else:
+            # Flexible: Encourage shift consistency but don't enforce it strictly
+            # This is handled as a soft constraint in the objective function
+            pass
         
         # Constraint 5: No worker can have a full week off (7 consecutive days off)
         for worker in self.workers:

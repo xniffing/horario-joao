@@ -61,7 +61,7 @@ def main():
             "Trabalhadores por Turno",
             min_value=1,
             max_value=4,
-            value=2,
+            value=1,
             help="Número de trabalhadores atribuídos a cada turno"
         )
         
@@ -72,7 +72,7 @@ def main():
                 "Dias Mínimos",
                 min_value=1,
                 max_value=6,
-                value=3,
+                value=1,
                 help="Dias mínimos de trabalho por semana"
             )
         with col2:
@@ -80,7 +80,7 @@ def main():
                 "Dias Máximos",
                 min_value=2,
                 max_value=7,
-                value=5,
+                value=7,
                 help="Dias máximos de trabalho por semana"
             )
         
@@ -88,6 +88,20 @@ def main():
         if min_working_days >= max_working_days:
             st.error("Os dias mínimos devem ser inferiores aos dias máximos")
             st.stop()
+        
+        st.markdown("### 🔧 Opções Avançadas")
+        
+        # Strict pattern checkbox
+        strict_pattern = st.checkbox(
+            "Aplicar padrão estrito 4+2 dias",
+            value=False,
+            help="Se desmarcado, permite maior flexibilidade no padrão de trabalho (recomendado para maior viabilidade)"
+        )
+        
+        if not strict_pattern:
+            st.info("💡 **Modo Flexível Ativo**: O padrão estrito 4+2 dias está desativado. Isto aumenta significativamente as hipóteses de encontrar um horário viável.")
+        else:
+            st.warning("⚠️ **Modo Estrito Ativo**: O padrão 4+2 dias está ativo. Isto pode tornar mais difícil encontrar horários viáveis.")
         
         # Generate button
         generate_btn = st.button("🚀 Gerar Horário", type="primary", use_container_width=True)
@@ -150,7 +164,8 @@ def main():
             num_workers=num_workers,
             workers_per_shift=workers_per_shift,
             min_working_days=min_working_days,
-            max_working_days=max_working_days
+            max_working_days=max_working_days,
+            strict_pattern=strict_pattern
         )
         
         with st.spinner("A gerar horário... Isto pode demorar alguns momentos."):
