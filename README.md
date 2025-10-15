@@ -1,16 +1,17 @@
 # OR-Tools Shift Scheduler
 
-A shift scheduling system using Google OR-Tools to generate monthly schedules for 5 workers across 4 shift types.
+A shift scheduling system using Google OR-Tools to generate monthly schedules with configurable workforce and flexible constraints.
 
 ## Features
 
-- **5 Workers**: Each worker follows a 4-days-on, 2-days-off pattern
+- **Configurable Workers**: 3-10 workers with flexible scheduling patterns
 - **4 Shift Types**: 
   - 7h-16h (Morning)
   - 15h-00h (Evening) 
   - 00h-08h (Night)
   - 9h-21h (Extended) - Not available on Sundays
-- **Coverage**: 2 workers per shift
+- **Flexible Coverage**: 1-4 workers per shift
+- **Pattern Options**: Strict 4+2 pattern or flexible scheduling
 - **Monthly Generation**: Generate schedules for any calendar month
 - **Streamlit Interface**: Interactive web interface for schedule generation and visualization
 
@@ -30,8 +31,16 @@ streamlit run app.py
 
 ## Constraints
 
-- Each worker works 4 consecutive days, then 2 days off
-- Workers maintain the same shift type during their 4-day blocks
-- Exactly 2 workers assigned to each shift
-- Sunday restrictions: Only 3 shifts available (7h-16h, 15h-00h, 00h-08h)
-- No worker can have a full week off
+- **Flexible Patterns**: Choose between strict 4+2 pattern or flexible scheduling
+- **Configurable Coverage**: 1-4 workers per shift (minimum 4 workers for 1 per shift, 8 workers for 2 per shift)
+- **Working Days**: Configurable min/max working days per week (1-7 days)
+- **Shift Consistency**: Optional shift consistency during working blocks
+- **Sunday Restrictions**: Only 3 shifts available on Sundays (7h-16h, 15h-00h, 00h-08h)
+- **No Full Week Off**: Workers cannot have 7 consecutive days off
+
+## Recommended Configurations
+
+- ✅ **4 workers, 1 per shift**: High success rate
+- ✅ **5 workers, 1 per shift**: Good balance
+- ✅ **8 workers, 2 per shift**: Full coverage
+- ❌ **5 workers, 2 per shift**: Not viable (insufficient workers)

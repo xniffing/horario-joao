@@ -53,7 +53,7 @@ def main():
             "Número de Trabalhadores",
             min_value=3,
             max_value=10,
-            value=5,
+            value=4,
             help="Número total de trabalhadores no sistema"
         )
         
@@ -103,6 +103,16 @@ def main():
         else:
             st.warning("⚠️ **Modo Estrito Ativo**: O padrão 4+2 dias está ativo. Isto pode tornar mais difícil encontrar horários viáveis.")
         
+        # Check for problematic configurations
+        if num_workers == 5 and workers_per_shift == 2:
+            st.error("⚠️ **Configuração Problemática**: 5 trabalhadores com 2 por turno pode não funcionar. Recomenda-se usar 4 trabalhadores com 1 por turno ou 8 trabalhadores com 2 por turno.")
+        elif num_workers < 4 and workers_per_shift == 2:
+            st.error("⚠️ **Configuração Insuficiente**: Para 2 trabalhadores por turno, são necessários pelo menos 8 trabalhadores.")
+        elif num_workers == 5 and workers_per_shift == 1:
+            st.success("✅ **Configuração Recomendada**: 5 trabalhadores com 1 por turno deve funcionar bem.")
+        elif num_workers == 4 and workers_per_shift == 1:
+            st.success("✅ **Configuração Garantida**: 4 trabalhadores com 1 por turno tem alta probabilidade de sucesso.")
+        
         # Generate button
         generate_btn = st.button("🚀 Gerar Horário", type="primary", use_container_width=True)
         
@@ -139,12 +149,12 @@ def main():
         - ✅ **8 trabalhadores, 2 por turno, 2-6 dias/semana**
         
         ### Solução B: Flexibilizar Requisitos de Padrão
-        - ✅ **5 trabalhadores, 2 por turno, 1-7 dias/semana** (sem padrão estrito 4+2)
-        - ✅ **6 trabalhadores, 2 por turno, 1-7 dias/semana**
+        - ✅ **4 trabalhadores, 1 por turno, 1-7 dias/semana** (sem padrão estrito 4+2)
+        - ✅ **8 trabalhadores, 2 por turno, 1-7 dias/semana**
         
         ### Solução C: Abordagem Híbrida
-        - ✅ **6 trabalhadores, 1 por turno, 2-6 dias/semana**
-        - ✅ **7 trabalhadores, 1 por turno, 2-6 dias/semana**
+        - ✅ **6 trabalhadores, 1 por turno, 1-7 dias/semana**
+        - ✅ **7 trabalhadores, 1 por turno, 1-7 dias/semana**
         
         ## 🎛️ Recomendações da Interface Streamlit
         
