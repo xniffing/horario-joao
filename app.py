@@ -187,7 +187,7 @@ def main():
                 
                 if not schedule_df.empty:
                     # Filter out unassigned shifts
-                    assigned_df = schedule_df[schedule_df['Count'] > 0].copy()
+                    assigned_df = schedule_df[schedule_df['Contagem'] > 0].copy()
                     
                     # Color code the shifts
                     def color_shift(val):
@@ -200,7 +200,7 @@ def main():
                         return colors.get(val, '')
                     
                     # Apply styling
-                    styled_df = assigned_df.style.applymap(color_shift, subset=['Shift'])
+                    styled_df = assigned_df.style.applymap(color_shift, subset=['Turno'])
                     st.dataframe(styled_df, use_container_width=True)
                     
                     # Summary statistics
