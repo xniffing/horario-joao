@@ -201,14 +201,14 @@ class ShiftScheduler:
                     workers_on_shift = []
                     for worker in self.workers:
                         if solution[worker][day_idx][shift_id]:
-                            workers_on_shift.append(f"Worker {worker + 1}")
+                            workers_on_shift.append(f"Trabalhador {worker + 1}")
                     
                     data.append({
-                        'Date': date_str,
-                        'Day': day_name,
-                        'Shift': shift_name,
-                        'Workers': ', '.join(workers_on_shift) if workers_on_shift else 'Unassigned',
-                        'Count': len(workers_on_shift)
+                        'Data': date_str,
+                        'Dia': day_name,
+                        'Turno': shift_name,
+                        'Trabalhadores': ', '.join(workers_on_shift) if workers_on_shift else 'Não Atribuído',
+                        'Contagem': len(workers_on_shift)
                     })
         
         return pd.DataFrame(data)
@@ -234,11 +234,11 @@ class ShiftScheduler:
                         worker_shifts.append(self.shifts[shift_id])
                 
                 data.append({
-                    'Worker': f"Worker {worker + 1}",
-                    'Date': date_str,
-                    'Day': day_name,
-                    'Shift': ', '.join(worker_shifts) if worker_shifts else 'Off',
-                    'Status': 'Working' if worker_shifts else 'Off'
+                    'Trabalhador': f"Trabalhador {worker + 1}",
+                    'Data': date_str,
+                    'Dia': day_name,
+                    'Turno': ', '.join(worker_shifts) if worker_shifts else 'Folga',
+                    'Estado': 'Trabalho' if worker_shifts else 'Folga'
                 })
         
         return pd.DataFrame(data)

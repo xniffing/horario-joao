@@ -15,106 +15,132 @@ from scheduler import ShiftScheduler
 
 def main():
     st.set_page_config(
-        page_title="Shift Scheduler",
+        page_title="Gestor de Turnos",
         page_icon="📅",
         layout="wide"
     )
     
-    st.title("📅 OR-Tools Shift Scheduler")
-    st.markdown("Generate monthly shift schedules for 5 workers with optimized constraints")
+    st.title("📅 Gestor de Turnos OR-Tools")
+    st.markdown("Gere horários mensais de turnos para 5 trabalhadores com restrições otimizadas")
     
     # Initialize scheduler (will be recreated with new parameters when needed)
     
     # Sidebar controls
     with st.sidebar:
-        st.header("⚙️ Schedule Configuration")
+        st.header("⚙️ Configuração do Horário")
         
         # Month/Year selector
         col1, col2 = st.columns(2)
         with col1:
             month = st.selectbox(
-                "Month",
+                "Mês",
                 options=list(range(1, 13)),
                 format_func=lambda x: calendar.month_name[x],
                 index=datetime.now().month - 1
             )
         with col2:
             year = st.selectbox(
-                "Year",
+                "Ano",
                 options=list(range(2024, 2030)),
                 index=0
             )
         
         st.markdown("---")
-        st.markdown("### 👥 Workforce Settings")
+        st.markdown("### 👥 Configurações da Equipa")
         
         # Configurable parameters
         num_workers = st.slider(
-            "Number of Workers",
+            "Número de Trabalhadores",
             min_value=3,
             max_value=10,
             value=5,
-            help="Total number of workers in the system"
+            help="Número total de trabalhadores no sistema"
         )
         
         workers_per_shift = st.slider(
-            "Workers per Shift",
+            "Trabalhadores por Turno",
             min_value=1,
             max_value=4,
             value=2,
-            help="Number of workers assigned to each shift"
+            help="Número de trabalhadores atribuídos a cada turno"
         )
         
-        st.markdown("### 📅 Working Days per Week")
+        st.markdown("### 📅 Dias de Trabalho por Semana")
         col1, col2 = st.columns(2)
         with col1:
             min_working_days = st.slider(
-                "Min Days",
+                "Dias Mínimos",
                 min_value=1,
                 max_value=6,
                 value=3,
-                help="Minimum working days per week"
+                help="Dias mínimos de trabalho por semana"
             )
         with col2:
             max_working_days = st.slider(
-                "Max Days",
+                "Dias Máximos",
                 min_value=2,
                 max_value=7,
                 value=5,
-                help="Maximum working days per week"
+                help="Dias máximos de trabalho por semana"
             )
         
         # Validate min/max
         if min_working_days >= max_working_days:
-            st.error("Min days must be less than max days")
+            st.error("Os dias mínimos devem ser inferiores aos dias máximos")
             st.stop()
         
         # Generate button
-        generate_btn = st.button("🚀 Generate Schedule", type="primary", use_container_width=True)
+        generate_btn = st.button("🚀 Gerar Horário", type="primary", use_container_width=True)
         
         # Display shift information
         st.markdown("---")
-        st.markdown("### 📋 Shift Information")
+        st.markdown("### 📋 Informação dos Turnos")
         st.markdown("""
-        **Weekdays (Mon-Sat):**
-        - 7h-16h (Morning)
-        - 15h-00h (Evening)
-        - 00h-08h (Night)
-        - 9h-21h (Extended)
+        **Dias Úteis (Seg-Sáb):**
+        - 7h-16h (Manhã)
+        - 15h-00h (Tarde)
+        - 00h-08h (Noite)
+        - 9h-21h (Estendido)
         
-        **Sundays:**
-        - 7h-16h (Morning)
-        - 15h-00h (Evening)
-        - 00h-08h (Night)
+        **Domingos:**
+        - 7h-16h (Manhã)
+        - 15h-00h (Tarde)
+        - 00h-08h (Noite)
         """)
         
-        st.markdown("### 📊 Constraints")
+        st.markdown("### 📊 Restrições")
         st.markdown("""
-        - 5 workers total
-        - 4 consecutive working days, then 2 days off
-        - 2 workers per shift
-        - Same shift type during working days
-        - No full week off
+        - 5 trabalhadores no total
+        - 4 dias consecutivos de trabalho, depois 2 dias de folga
+        - 2 trabalhadores por turno
+        - Mesmo tipo de turno durante os dias de trabalho
+        - Sem semana completa de folga
+        """)
+        
+        st.markdown("""
+        ## 🎯 Soluções Recomendadas
+        
+        ### Solução A: Flexibilizar Requisitos de Trabalhadores
+        - ✅ **4 trabalhadores, 1 por turno, 2-6 dias/semana**
+        - ✅ **8 trabalhadores, 2 por turno, 2-6 dias/semana**
+        
+        ### Solução B: Flexibilizar Requisitos de Padrão
+        - ✅ **5 trabalhadores, 2 por turno, 1-7 dias/semana** (sem padrão estrito 4+2)
+        - ✅ **6 trabalhadores, 2 por turno, 1-7 dias/semana**
+        
+        ### Solução C: Abordagem Híbrida
+        - ✅ **6 trabalhadores, 1 por turno, 2-6 dias/semana**
+        - ✅ **7 trabalhadores, 1 por turno, 2-6 dias/semana**
+        
+        ## 🎛️ Recomendações da Interface Streamlit
+        
+        A interface atual permite-lhe experimentar com estes parâmetros:
+        - **Comece com 4 trabalhadores, 1 por turno** para sucesso garantido
+        - **Experimente 8 trabalhadores, 2 por turno** para cobertura total
+        - **Ajuste os dias de trabalho para 1-7** para máxima flexibilidade
+        - **Use meses diferentes** para encontrar um melhor alinhamento
+        
+        > ⚠️ **Nota Importante**: O padrão de 4 dias de trabalho/2 dias de folga é a restrição mais rigorosa e a principal razão para a inviabilidade em cenários de menor força de trabalho.
         """)
     
     # Main content area
@@ -127,21 +153,21 @@ def main():
             max_working_days=max_working_days
         )
         
-        with st.spinner("Generating schedule... This may take a few moments."):
+        with st.spinner("A gerar horário... Isto pode demorar alguns momentos."):
             result = scheduler.solve_schedule(year, month)
         
         if result:
-            st.success(f"✅ Schedule generated successfully for {calendar.month_name[month]} {year}")
+            st.success(f"✅ Horário gerado com sucesso para {calendar.month_name[month]} {year}")
             
             # Store result in session state
             st.session_state.schedule_result = result
             st.session_state.scheduler = scheduler
             
             # Create tabs for different views
-            tab1, tab2, tab3, tab4 = st.tabs(["📅 Calendar View", "👥 Worker View", "📊 Coverage Analysis", "📁 Export"])
+            tab1, tab2, tab3, tab4 = st.tabs(["📅 Vista do Calendário", "👥 Vista dos Trabalhadores", "📊 Análise de Cobertura", "📁 Exportar"])
             
             with tab1:
-                st.subheader("📅 Schedule by Day and Shift")
+                st.subheader("📅 Horário por Dia e Turno")
                 schedule_df = scheduler.format_schedule(result)
                 
                 if not schedule_df.empty:
@@ -165,103 +191,103 @@ def main():
                     # Summary statistics
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Total Days", len(schedule_df['Date'].unique()))
+                        st.metric("Total de Dias", len(schedule_df['Data'].unique()))
                     with col2:
-                        st.metric("Total Shifts", len(assigned_df))
+                        st.metric("Total de Turnos", len(assigned_df))
                     with col3:
-                        coverage = len(assigned_df[assigned_df['Count'] == 2]) / len(assigned_df) * 100
-                        st.metric("Coverage %", f"{coverage:.1f}%")
+                        coverage = len(assigned_df[assigned_df['Contagem'] == 2]) / len(assigned_df) * 100
+                        st.metric("Cobertura %", f"{coverage:.1f}%")
                 else:
-                    st.warning("No schedule data available")
+                    st.warning("Nenhum dado de horário disponível")
             
             with tab2:
-                st.subheader("👥 Schedule by Worker")
+                st.subheader("👥 Horário por Trabalhador")
                 worker_df = scheduler.get_worker_schedule(result)
                 
                 if not worker_df.empty:
                     # Create worker selector
                     selected_worker = st.selectbox(
-                        "Select Worker to View",
-                        options=[f"Worker {i+1}" for i in range(scheduler.num_workers)],
+                        "Selecionar Trabalhador para Ver",
+                        options=[f"Trabalhador {i+1}" for i in range(scheduler.num_workers)],
                         key="worker_selector"
                     )
                     
                     # Filter data for selected worker
-                    worker_data = worker_df[worker_df['Worker'] == selected_worker]
+                    worker_data = worker_df[worker_df['Trabalhador'] == selected_worker]
                     
                     # Display worker schedule
                     st.dataframe(worker_data, use_container_width=True)
                     
                     # Worker statistics
-                    working_days = len(worker_data[worker_data['Status'] == 'Working'])
-                    off_days = len(worker_data[worker_data['Status'] == 'Off'])
+                    working_days = len(worker_data[worker_data['Estado'] == 'Trabalho'])
+                    off_days = len(worker_data[worker_data['Estado'] == 'Folga'])
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.metric("Working Days", working_days)
+                        st.metric("Dias de Trabalho", working_days)
                     with col2:
-                        st.metric("Days Off", off_days)
+                        st.metric("Dias de Folga", off_days)
                     
                     # Visualize worker pattern
                     fig = px.bar(
                         worker_data, 
-                        x='Date', 
-                        y='Status',
-                        color='Status',
-                        title=f"{selected_worker} Schedule Pattern",
-                        color_discrete_map={'Working': '#2E8B57', 'Off': '#DC143C'}
+                        x='Data', 
+                        y='Estado',
+                        color='Estado',
+                        title=f"Padrão de Horário - {selected_worker}",
+                        color_discrete_map={'Trabalho': '#2E8B57', 'Folga': '#DC143C'}
                     )
                     fig.update_layout(xaxis_tickangle=45)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.warning("No worker schedule data available")
+                    st.warning("Nenhum dado de horário de trabalhador disponível")
             
             with tab3:
-                st.subheader("📊 Coverage Analysis")
+                st.subheader("📊 Análise de Cobertura")
                 
                 if 'schedule_result' in st.session_state:
                     schedule_df = scheduler.format_schedule(result)
                     
                     if not schedule_df.empty:
                         # Shift coverage analysis
-                        shift_coverage = schedule_df.groupby('Shift')['Count'].agg(['sum', 'mean', 'count']).reset_index()
-                        shift_coverage.columns = ['Shift', 'Total Workers', 'Avg Workers', 'Days']
-                        shift_coverage['Coverage %'] = (shift_coverage['Total Workers'] / (shift_coverage['Days'] * 2) * 100).round(1)
+                        shift_coverage = schedule_df.groupby('Turno')['Contagem'].agg(['sum', 'mean', 'count']).reset_index()
+                        shift_coverage.columns = ['Turno', 'Total Trabalhadores', 'Média Trabalhadores', 'Dias']
+                        shift_coverage['Cobertura %'] = (shift_coverage['Total Trabalhadores'] / (shift_coverage['Dias'] * 2) * 100).round(1)
                         
-                        st.subheader("Shift Coverage Summary")
+                        st.subheader("Resumo da Cobertura de Turnos")
                         st.dataframe(shift_coverage, use_container_width=True)
                         
                         # Visualize coverage
                         fig = px.bar(
                             shift_coverage,
-                            x='Shift',
-                            y='Coverage %',
-                            title='Shift Coverage Percentage',
-                            color='Coverage %',
+                            x='Turno',
+                            y='Cobertura %',
+                            title='Percentagem de Cobertura por Turno',
+                            color='Cobertura %',
                             color_continuous_scale='RdYlGn'
                         )
                         st.plotly_chart(fig, use_container_width=True)
                         
                         # Daily coverage heatmap
                         daily_coverage = schedule_df.pivot_table(
-                            index='Date', 
-                            columns='Shift', 
-                            values='Count', 
+                            index='Data', 
+                            columns='Turno', 
+                            values='Contagem', 
                             fill_value=0
                         )
                         
                         fig = px.imshow(
                             daily_coverage.T,
-                            title='Daily Shift Coverage Heatmap',
+                            title='Mapa de Calor - Cobertura Diária de Turnos',
                             color_continuous_scale='RdYlGn',
                             aspect='auto'
                         )
                         st.plotly_chart(fig, use_container_width=True)
                     else:
-                        st.warning("No coverage data available")
+                        st.warning("Nenhum dado de cobertura disponível")
             
             with tab4:
-                st.subheader("📁 Export Schedule")
+                st.subheader("📁 Exportar Horário")
                 
                 if 'schedule_result' in st.session_state:
                     schedule_df = scheduler.format_schedule(result)
@@ -270,28 +296,28 @@ def main():
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        st.markdown("**📅 Daily Schedule (CSV)**")
+                        st.markdown("**📅 Horário Diário (CSV)**")
                         csv_schedule = schedule_df.to_csv(index=False)
                         st.download_button(
-                            label="Download Daily Schedule",
+                            label="Descarregar Horário Diário",
                             data=csv_schedule,
-                            file_name=f"schedule_{year}_{month:02d}.csv",
+                            file_name=f"horario_{year}_{month:02d}.csv",
                             mime="text/csv"
                         )
                     
                     with col2:
-                        st.markdown("**👥 Worker Schedule (CSV)**")
+                        st.markdown("**👥 Horário dos Trabalhadores (CSV)**")
                         csv_workers = worker_df.to_csv(index=False)
                         st.download_button(
-                            label="Download Worker Schedule",
+                            label="Descarregar Horário dos Trabalhadores",
                             data=csv_workers,
-                            file_name=f"workers_{year}_{month:02d}.csv",
+                            file_name=f"trabalhadores_{year}_{month:02d}.csv",
                             mime="text/csv"
                         )
                     
                     # Display preview of data to export
-                    st.markdown("**Preview of Export Data:**")
-                    preview_tab1, preview_tab2 = st.tabs(["Daily Schedule", "Worker Schedule"])
+                    st.markdown("**Pré-visualização dos Dados para Exportar:**")
+                    preview_tab1, preview_tab2 = st.tabs(["Horário Diário", "Horário dos Trabalhadores"])
                     
                     with preview_tab1:
                         st.dataframe(schedule_df.head(10), use_container_width=True)
@@ -299,44 +325,44 @@ def main():
                     with preview_tab2:
                         st.dataframe(worker_df.head(10), use_container_width=True)
         else:
-            st.error("❌ Unable to generate a feasible schedule. The constraints may be too restrictive for this month.")
+            st.error("❌ Impossível gerar um horário viável. As restrições podem ser demasiado restritivas para este mês.")
             st.markdown("""
-            **Possible solutions:**
-            - Try a different month
-            - The 4-days-on/2-days-off pattern may not align well with this month's calendar
-            - Consider adjusting constraints if needed
+            **Soluções possíveis:**
+            - Experimente um mês diferente
+            - O padrão de 4 dias de trabalho/2 dias de folga pode não se alinhar bem com o calendário deste mês
+            - Considere ajustar as restrições se necessário
             """)
     
     # Display instructions if no schedule generated yet
     if 'schedule_result' not in st.session_state:
         st.markdown("""
-        ## 🚀 Getting Started
+        ## 🚀 Como Começar
         
-        1. **Select Month/Year** in the sidebar
-        2. **Click "Generate Schedule"** to create the schedule
-        3. **View Results** in the different tabs:
-           - **Calendar View**: See which workers are assigned to each shift
-           - **Worker View**: See each worker's individual schedule
-           - **Coverage Analysis**: Analyze shift coverage and patterns
-           - **Export**: Download schedules as CSV files
+        1. **Selecionar Mês/Ano** na barra lateral
+        2. **Clicar em "Gerar Horário"** para criar o horário
+        3. **Ver Resultados** nos diferentes separadores:
+           - **Vista do Calendário**: Ver quais trabalhadores estão atribuídos a cada turno
+           - **Vista dos Trabalhadores**: Ver o horário individual de cada trabalhador
+           - **Análise de Cobertura**: Analisar a cobertura de turnos e padrões
+           - **Exportar**: Descarregar horários como ficheiros CSV
         
-        ## 📋 About the Scheduler
+        ## 📋 Sobre o Gestor de Horários
         
-        This system uses Google OR-Tools to solve complex scheduling constraints:
-        - **5 Workers** with rotating schedules
-        - **4 Shift Types** (3 on Sundays)
-        - **2 Workers per Shift** for proper coverage
-        - **4 Days On, 2 Days Off** pattern
-        - **Consistent Shift Types** during working periods
+        Este sistema utiliza o Google OR-Tools para resolver restrições complexas de horários:
+        - **5 Trabalhadores** com horários rotativos
+        - **4 Tipos de Turno** (3 aos domingos)
+        - **2 Trabalhadores por Turno** para cobertura adequada
+        - **Padrão de 4 Dias de Trabalho, 2 Dias de Folga**
+        - **Tipos de Turno Consistentes** durante os períodos de trabalho
         """)
         
         # Show example of what the schedule looks like
-        st.markdown("### 📊 Example Schedule Preview")
+        st.markdown("### 📊 Pré-visualização do Exemplo de Horário")
         example_data = {
             'Date': ['2024-01-01', '2024-01-01', '2024-01-01', '2024-01-01'],
-            'Day': ['Monday', 'Monday', 'Monday', 'Monday'],
+            'Day': ['Segunda-feira', 'Segunda-feira', 'Segunda-feira', 'Segunda-feira'],
             'Shift': ['7h-16h', '15h-00h', '00h-08h', '9h-21h'],
-            'Workers': ['Worker 1, Worker 2', 'Worker 3, Worker 4', 'Worker 5, Worker 1', 'Worker 2, Worker 3'],
+            'Workers': ['Trabalhador 1, Trabalhador 2', 'Trabalhador 3, Trabalhador 4', 'Trabalhador 5, Trabalhador 1', 'Trabalhador 2, Trabalhador 3'],
             'Count': [2, 2, 2, 2]
         }
         example_df = pd.DataFrame(example_data)
