@@ -31,10 +31,10 @@ streamlit run app.py
 
 ## Constraints
 
-- **Flexible Patterns**: Choose between strict 4+2 pattern or flexible scheduling
-- **Configurable Coverage**: 1-4 workers per shift (minimum 4 workers for 1 per shift, 8 workers for 2 per shift)
+- **Working Pattern**: **MANDATORY** 4 consecutive working days followed by 2 rest days
+- **Configurable Coverage**: 1 worker per shift (minimum 4 workers total)
 - **Working Days**: Configurable min/max working days per week (1-7 days)
-- **Shift Consistency**: Optional shift consistency during working blocks
+- **Shift Consistency**: **MANDATORY** - Workers maintain the same shift during their working period until they rest (can change shift after rest days)
 - **Sunday Restrictions**: Only 3 shifts available on Sundays (7h-16h, 15h-00h, 00h-08h)
 - **No Full Week Off**: Workers cannot have 7 consecutive days off
 

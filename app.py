@@ -60,9 +60,9 @@ def main():
         workers_per_shift = st.slider(
             "Trabalhadores por Turno",
             min_value=1,
-            max_value=4,
+            max_value=1,
             value=1,
-            help="Número de trabalhadores atribuídos a cada turno"
+            help="Número de trabalhadores por turno (sempre 1 por turno)"
         )
         
         st.markdown("### 📅 Dias de Trabalho por Semana")
@@ -94,24 +94,24 @@ def main():
         # Strict pattern checkbox
         strict_pattern = st.checkbox(
             "Aplicar padrão estrito 4+2 dias",
-            value=False,
-            help="Se desmarcado, permite maior flexibilidade no padrão de trabalho (recomendado para maior viabilidade)"
+            value=True,
+            help="OBRIGATÓRIO: Trabalhadores devem trabalhar 4 dias consecutivos seguidos de 2 dias de folga"
         )
         
         if not strict_pattern:
             st.info("💡 **Modo Flexível Ativo**: O padrão estrito 4+2 dias está desativado. Isto aumenta significativamente as hipóteses de encontrar um horário viável.")
         else:
-            st.warning("⚠️ **Modo Estrito Ativo**: O padrão 4+2 dias está ativo. Isto pode tornar mais difícil encontrar horários viáveis.")
+            st.success("✅ **Padrão 4+2 Obrigatório**: Trabalhadores trabalham 4 dias consecutivos seguidos de 2 dias de folga.")
         
         # Check for problematic configurations
-        if num_workers == 5 and workers_per_shift == 2:
-            st.error("⚠️ **Configuração Problemática**: 5 trabalhadores com 2 por turno pode não funcionar. Recomenda-se usar 4 trabalhadores com 1 por turno ou 8 trabalhadores com 2 por turno.")
-        elif num_workers < 4 and workers_per_shift == 2:
-            st.error("⚠️ **Configuração Insuficiente**: Para 2 trabalhadores por turno, são necessários pelo menos 8 trabalhadores.")
-        elif num_workers == 5 and workers_per_shift == 1:
-            st.success("✅ **Configuração Recomendada**: 5 trabalhadores com 1 por turno deve funcionar bem.")
+        if num_workers < 4:
+            st.error("⚠️ **Configuração Insuficiente**: São necessários pelo menos 4 trabalhadores.")
         elif num_workers == 4 and workers_per_shift == 1:
-            st.success("✅ **Configuração Garantida**: 4 trabalhadores com 1 por turno tem alta probabilidade de sucesso.")
+            st.warning("⚠️ **Configuração Mínima**: 4 trabalhadores com 1 por turno é o mínimo viável.")
+        elif num_workers >= 5 and workers_per_shift == 1:
+            st.success("✅ **Configuração Recomendada**: Esta configuração deve funcionar bem.")
+        elif num_workers >= 6:
+            st.success("✅ **Configuração Excelente**: Boa cobertura e flexibilidade.")
         
         # Generate button
         generate_btn = st.button("🚀 Gerar Horário", type="primary", use_container_width=True)
@@ -134,33 +134,35 @@ def main():
         
         st.markdown("### 📊 Restrições")
         st.markdown("""
-        - 5 trabalhadores no total
-        - 4 dias consecutivos de trabalho, depois 2 dias de folga
-        - 2 trabalhadores por turno
-        - Mesmo tipo de turno durante os dias de trabalho
-        - Sem semana completa de folga
+        - **Cobertura por Turno**: 1 trabalhador por turno
+        - **Cobertura por Dia**:
+          - Dias úteis: 4 turnos (3 normais + 1 estendido) = 4 trabalhadores
+          - Domingos: 3 turnos (3 normais) = 3 trabalhadores
+        - **Padrão de Trabalho**: **OBRIGATÓRIO** - 4 dias consecutivos, depois 2 dias de folga
+        - **Consistência de Turno**: **OBRIGATÓRIA** - Trabalhadores mantêm o mesmo turno durante o período de trabalho até folgarem (depois podem mudar de turno)
+        - **Restrições**: Sem semana completa de folga
         """)
         
         st.markdown("""
         ## 🎯 Soluções Recomendadas
         
-        ### Solução A: Flexibilizar Requisitos de Trabalhadores
-        - ✅ **4 trabalhadores, 1 por turno, 2-6 dias/semana**
-        - ✅ **8 trabalhadores, 2 por turno, 2-6 dias/semana**
+        ### Solução A: Configuração Mínima
+        - ✅ **4 trabalhadores, 1 por turno, 1-7 dias/semana** (mínimo viável com consistência)
+        - ⚠️ **5+ trabalhadores**: Pode não funcionar com consistência obrigatória
         
-        ### Solução B: Flexibilizar Requisitos de Padrão
-        - ✅ **4 trabalhadores, 1 por turno, 1-7 dias/semana** (sem padrão estrito 4+2)
-        - ✅ **8 trabalhadores, 2 por turno, 1-7 dias/semana**
+        ### Solução B: Configuração Flexível
+        - ✅ **4 trabalhadores, 1 por turno, 1-7 dias/semana** (recomendado)
+        - 💡 **Nota**: Com consistência obrigatória, 4 trabalhadores é o ideal
         
-        ### Solução C: Abordagem Híbrida
-        - ✅ **6 trabalhadores, 1 por turno, 1-7 dias/semana**
-        - ✅ **7 trabalhadores, 1 por turno, 1-7 dias/semana**
+        ### Solução C: Configuração Alternativa
+        - 🔧 **Para mais trabalhadores**: Considere desativar o padrão estrito 4+2 dias
+        - 🔧 **Para maior flexibilidade**: Ajuste os dias de trabalho por semana
         
         ## 🎛️ Recomendações da Interface Streamlit
         
         A interface atual permite-lhe experimentar com estes parâmetros:
-        - **Comece com 4 trabalhadores, 1 por turno** para sucesso garantido
-        - **Experimente 8 trabalhadores, 2 por turno** para cobertura total
+        - **Use 4 trabalhadores, 1 por turno** para sucesso garantido com consistência
+        - **Para mais trabalhadores**: Pode ser necessário relaxar restrições
         - **Ajuste os dias de trabalho para 1-7** para máxima flexibilidade
         - **Use meses diferentes** para encontrar um melhor alinhamento
         

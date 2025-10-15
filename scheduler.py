@@ -75,11 +75,11 @@ class ShiftScheduler:
                 if available_shifts:
                     model.Add(sum(shifts[worker][day][shift] for shift in available_shifts) <= 1)
         
-        # Constraint 2: Exactly workers_per_shift workers per shift per day
+        # Constraint 2: Exactly 1 worker per shift per day
         for day in range(num_days):
             available_shifts = self.get_available_shifts(days[day])
             for shift in available_shifts:
-                model.Add(sum(shifts[worker][day][shift] for worker in self.workers) == self.workers_per_shift)
+                model.Add(sum(shifts[worker][day][shift] for worker in self.workers) == 1)
         
         # Constraint 3: Working pattern (strict 4+2 or flexible)
         if self.strict_pattern:
@@ -133,28 +133,26 @@ class ShiftScheduler:
                         model.Add(sum(week_working_days) >= self.min_working_days)
                         model.Add(sum(week_working_days) <= self.max_working_days)
         
-        # Constraint 4: Workers maintain same shift type during their working blocks (conditional)
-        if self.strict_pattern:
-            # Strict: Workers maintain same shift type during their 4-day blocks
-            for worker in self.workers:
-                for start_day in range(num_days - 3):  # Need 4 days for the block
-                    for shift in self.shifts.keys():
-                        if start_day + 3 < num_days:
-                            available_shifts_0 = self.get_available_shifts(days[start_day])
-                            if shift in available_shifts_0:
-                                # If worker works this shift on day 0, they must work it on days 1, 2, 3
-                                works_shift_day_0 = shifts[worker][start_day][shift]
-                                
-                                for day_offset in range(1, 4):
-                                    day = start_day + day_offset
-                                    if day < num_days:
-                                        available_shifts = self.get_available_shifts(days[day])
-                                        if shift in available_shifts:
-                                            model.Add(shifts[worker][day][shift] == 1).OnlyEnforceIf(works_shift_day_0)
-        else:
-            # Flexible: Encourage shift consistency but don't enforce it strictly
-            # This is handled as a soft constraint in the objective function
-            pass
+        # Constraint 4: Workers maintain same shift type during their working period until they rest
+        # This applies regardless of strict_pattern setting
+        for worker in self.workers:
+            for start_day in range(num_days - 1):  # Check consecutive days
+                for shift in self.shifts.keys():
+                    # If worker works this shift on start_day, they must work the same shift
+                    # on the next day if they work (no shift change without rest)
+                    if start_day + 1 < num_days:
+                        available_shifts_0 = self.get_available_shifts(days[start_day])
+                        available_shifts_1 = self.get_available_shifts(days[start_day + 1])
+                        
+                        if shift in available_shifts_0 and shift in available_shifts_1:
+                            works_shift_day_0 = shifts[worker][start_day][shift]
+                            works_shift_day_1 = shifts[worker][start_day + 1][shift]
+                            
+                            # If works on day 0 and day 1, must be same shift
+                            works_both_days = model.NewBoolVar(f'worker_{worker}_works_both_{start_day}')
+                            model.Add(works_both_days == 1).OnlyEnforceIf(works_shift_day_0)
+                            model.Add(works_both_days == 1).OnlyEnforceIf(works_shift_day_1)
+                            model.Add(works_shift_day_0 == works_shift_day_1).OnlyEnforceIf(works_both_days)
         
         # Constraint 5: No worker can have a full week off (7 consecutive days off)
         for worker in self.workers:
